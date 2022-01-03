@@ -22,6 +22,7 @@ function checksExistsUserAccount(req, res, next) {
 function checksCreateTodosUserAvailability(req, res, next) {
   const {user} = res.locals
   if(!user.pro && user.todos.length >= 10) res.status(401).json({error: `User not authorized to create new todo`})
+  
   next()
 }
 
