@@ -27,10 +27,10 @@ function checksCreateTodosUserAvailability(req, res, next) {
 }
 
 function checksTodoExists(req, res, next) {
-  const {user} = req.headers
+  const {username} = req.headers
   const {id} = req.params
 
-  const user = users.find(({username})=> username === user.username )
+  const user = users.find((user)=> username === user.username )
   if(!user) return res.status(404).json({error: `User - ${username}, not found`})
 
   const validUuidV4 = validate(id, 4)
@@ -39,6 +39,7 @@ function checksTodoExists(req, res, next) {
   const todo = user.todos.find(todo=> todo.id === id )
   if(!todo) return res.status(404).json({error: `Id - ${id}, not found`})
 
+  req.user = user
   req.todo = todo
   next()
 }
