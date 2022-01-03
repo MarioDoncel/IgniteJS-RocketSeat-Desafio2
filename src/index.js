@@ -22,7 +22,7 @@ function checksExistsUserAccount(req, res, next) {
 function checksCreateTodosUserAvailability(req, res, next) {
   const {user} = res.locals
   if(!user.pro && user.todos.length >= 10) res.status(401).json({error: `User not authorized to create new todo`})
-  
+
   next()
 }
 
@@ -33,7 +33,7 @@ function checksTodoExists(req, res, next) {
   const validUuidV4 = validate(id, 4)
   if(!validUuidV4)res.status(400).json({error: `Invalid Id`})
 
-  const todo = users.todos.find(todo=> todo.id === id )
+  const todo = user.todos.find(todo=> todo.id === id )
   if(!todo) return res.status(404).json({error: `Id - ${id}, not found`})
 
   res.locals.todo = todo
