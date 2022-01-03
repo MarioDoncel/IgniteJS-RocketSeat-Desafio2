@@ -15,7 +15,7 @@ function checksExistsUserAccount(req, res, next) {
  const user = users.find(user=> user.username === username )
  if(!user) return res.status(404).json({error: `User - ${username}, not found`})
  
- res.locals.user = user
+ req.user = user
  next()
 }
 
@@ -36,7 +36,7 @@ function checksTodoExists(req, res, next) {
   const todo = user.todos.find(todo=> todo.id === id )
   if(!todo) return res.status(404).json({error: `Id - ${id}, not found`})
 
-  res.locals.todo = todo
+  req.todo = todo
   next()
 }
 
@@ -45,7 +45,7 @@ function findUserById(req, res, next) {
   const user = users.find(user=>user.id ===id)
   if(!user) return res.status(404).json({error: `User Id - ${id} - not found`})
 
-  res.locals.user = user
+  req.user = user
   next()
 }
 
@@ -72,13 +72,13 @@ app.post('/users', (request, response) => {
 });
 
 app.get('/users/:id', findUserById, (request, response) => {
-  const { user } =  response.locals;
+  const { user } =  request;
 
   return response.json(user);
 });
 
 app.patch('/users/:id/pro', findUserById, (request, response) => {
-  const { user } = response.locals;
+  const { user } = request;
 
   if (user.pro) {
     return response.status(400).json({ error: 'Pro plan is already activated.' });
@@ -90,14 +90,14 @@ app.patch('/users/:id/pro', findUserById, (request, response) => {
 });
 
 app.get('/todos', checksExistsUserAccount, (request, response) => {
-  const { user } = response.locals;
+  const { user } = request;
 
   return response.json(user.todos);
 });
 
 app.post('/todos', checksExistsUserAccount, checksCreateTodosUserAvailability, (request, response) => {
   const { title, deadline } = request.body;
-  const { user } = response.locals;
+  const { user } = request;
 
   const newTodo = {
     id: uuidv4(),
@@ -114,7 +114,7 @@ app.post('/todos', checksExistsUserAccount, checksCreateTodosUserAvailability, (
 
 app.put('/todos/:id', checksTodoExists, (request, response) => {
   const { title, deadline } = request.body;
-  const { todo } = response.locals;
+  const { todo } = request;
 
   todo.title = title;
   todo.deadline = new Date(deadline);
@@ -123,7 +123,7 @@ app.put('/todos/:id', checksTodoExists, (request, response) => {
 });
 
 app.patch('/todos/:id/done', checksTodoExists, (request, response) => {
-  const { todo } = response.locals;
+  const { todo } = request;
 
   todo.done = true;
 
@@ -131,7 +131,7 @@ app.patch('/todos/:id/done', checksTodoExists, (request, response) => {
 });
 
 app.delete('/todos/:id', checksExistsUserAccount, checksTodoExists, (request, response) => {
-  const { user, todo } = response.locals;
+  const { user, todo } = request;
 
   const todoIndex = user.todos.indexOf(todo);
 
