@@ -9,19 +9,37 @@ app.use(cors());
 
 const users = [];
 
-function checksExistsUserAccount(request, response, next) {
-  // Complete aqui
+function checksExistsUserAccount(req, res, next) {
+ const {username} = req.headers
+
+ const user = users.find(user=> user.username === username )
+ if(!user) return res.status(404).json({error: `User - ${username}, not found`})
+ 
+ res.locals.user = user
+ next()
 }
 
-function checksCreateTodosUserAvailability(request, response, next) {
-  // Complete aqui
+function checksCreateTodosUserAvailability(req, res, next) {
+  const {user} = res.locals
+  if(!user.pro && user.todos.length >= 10) res.status(401).json({error: `User not authorized to create new todo`})
+  next()
 }
 
-function checksTodoExists(request, response, next) {
-  // Complete aqui
+function checksTodoExists(req, res, next) {
+  const {user} = res.locals
+  const {id} = req.params
+
+  const validUuidV4 = validate(id, 4)
+  if(!validUuidV4)res.status(400).json({error: `Invalid Id`})
+
+  const todo = users.todos.find(todo=> todo.id === id )
+  if(!todo) return res.status(404).json({error: `Id - ${id}, not found`})
+
+  res.locals.todo = todo
+  next()
 }
 
-function findUserById(request, response, next) {
+function findUserById(req, res, next) {
   // Complete aqui
 }
 
@@ -48,13 +66,13 @@ app.post('/users', (request, response) => {
 });
 
 app.get('/users/:id', findUserById, (request, response) => {
-  const { user } = request;
+  const { user } =  response.locals;
 
   return response.json(user);
 });
 
 app.patch('/users/:id/pro', findUserById, (request, response) => {
-  const { user } = request;
+  const { user } = response.locals;
 
   if (user.pro) {
     return response.status(400).json({ error: 'Pro plan is already activated.' });
@@ -66,14 +84,14 @@ app.patch('/users/:id/pro', findUserById, (request, response) => {
 });
 
 app.get('/todos', checksExistsUserAccount, (request, response) => {
-  const { user } = request;
+  const { user } = response.locals;
 
   return response.json(user.todos);
 });
 
 app.post('/todos', checksExistsUserAccount, checksCreateTodosUserAvailability, (request, response) => {
   const { title, deadline } = request.body;
-  const { user } = request;
+  const { user } = response.locals;
 
   const newTodo = {
     id: uuidv4(),
@@ -90,7 +108,7 @@ app.post('/todos', checksExistsUserAccount, checksCreateTodosUserAvailability, (
 
 app.put('/todos/:id', checksTodoExists, (request, response) => {
   const { title, deadline } = request.body;
-  const { todo } = request;
+  const { todo } = response.locals;
 
   todo.title = title;
   todo.deadline = new Date(deadline);
@@ -99,7 +117,7 @@ app.put('/todos/:id', checksTodoExists, (request, response) => {
 });
 
 app.patch('/todos/:id/done', checksTodoExists, (request, response) => {
-  const { todo } = request;
+  const { todo } = response.locals;
 
   todo.done = true;
 
@@ -107,7 +125,7 @@ app.patch('/todos/:id/done', checksTodoExists, (request, response) => {
 });
 
 app.delete('/todos/:id', checksExistsUserAccount, checksTodoExists, (request, response) => {
-  const { user, todo } = request;
+  const { user, todo } = response.locals;
 
   const todoIndex = user.todos.indexOf(todo);
 
